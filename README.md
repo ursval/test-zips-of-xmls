@@ -81,7 +81,10 @@
 
 #### Запуск (пример):
 ```shell
-python test-zips-of-xmls.py -m create -w /tmp/testzip 
+# создание zip-файлов
+python test-zips-of-xmls.py -m create -w /tmp/testzip
+# анализ ВСЕХ zip-файлов из директории
+python test-zips-of-xmls.py -m analyze -w /tmp/testzip 
 ```
 
 ### Дисклеймер и TODO
