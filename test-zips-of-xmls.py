@@ -3,6 +3,8 @@ import os.path
 from argparse import ArgumentParser
 from configparser import ConfigParser
 from glob import glob
+from multiprocessing import Pool
+from itertools import chain
 
 from modules.utils import DEFAULT_ENCODING
 from modules.generation import create_zip_file
@@ -83,16 +85,14 @@ if __name__ == '__main__':
         search_template = os.path.join(args.workdir, ZIPFILE_SEARCH_TEMPLATE)
         file_list = glob(search_template)
 
-        processed_files = []
-        all_stats = []
-        for fname in file_list:
-            logging.debug(f"Processing file: {fname}")
-            zip_stats = get_zip_stats(fname)
-            if zip_stats:
-                processed_files.append(fname)
-                all_stats.extend(zip_stats)
-            else:
-                logging.info(f"ZIP {fname} is empty or was not processed due to errors")
+        # get_zip_stats is more IO-bound then CPU-bound on small files, so we also can use threads
+        # if we go for long files, we get more random generations which is CPU-bound.
+        # So, just in case I stick to processes instead of threads
+        pool = Pool(os.cpu_count()-1)
+        stats_per_file = pool.map(get_zip_stats, file_list)
+        # flatten list
+        all_stats = list(chain(*stats_per_file))
+
 
         csv_1_name = config['main']['csvname_template'].format("id-level")
         csv_2_name = config['main']['csvname_template'].format("id-objname")
